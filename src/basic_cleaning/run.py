@@ -12,7 +12,6 @@ import numpy as np
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(message)s")
 logger = logging.getLogger()
 
-
 # DO NOT MODIFY
 def go(args):
     logger.info("Starting wandb run.")
@@ -45,17 +44,18 @@ def go(args):
     # Filter by geographical boundaries
     logger.info("Filtering data for valid geographical boundaries.")
     idx_geo = df["longitude"].between(-74.25, -73.50) & df["latitude"].between(40.5, 41.2)
+    
+    # Debug invalid rows
     invalid_rows = df.loc[~idx_geo, ["id", "longitude", "latitude"]]
-    
     if not invalid_rows.empty:
-        logger.warning(f"Found {len(invalid_rows)} rows outside geographical boundaries.")
-        logger.warning("Logging invalid rows:")
+        logger.warning(f"Found {len(invalid_rows)} rows outside geographical boundaries:")
         logger.warning(invalid_rows)
-    
+
     # Drop invalid rows
     df = df[idx_geo].copy()
 
-    # Final Validation
+    # Final Validation: Check if all rows are valid
+    logger.info("Validating that all rows are within valid boundaries.")
     final_invalid_geo = df[~(df["longitude"].between(-74.25, -73.50) & df["latitude"].between(40.5, 41.2))]
     if not final_invalid_geo.empty:
         logger.error("Rows still outside valid geographical boundaries after filtering:")
@@ -126,4 +126,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     go(args)
-
