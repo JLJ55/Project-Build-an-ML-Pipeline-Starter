@@ -6,6 +6,7 @@ import argparse
 import logging
 import wandb
 import pandas as pd
+import numpy as np
 
 # DO NOT MODIFY
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(message)s")
@@ -34,6 +35,7 @@ def go(args):
     idx_price = df['price'].between(float(args.min_price), float(args.max_price))
     if np.sum(~idx_price) > 0:
         logger.warning(f"Found {np.sum(~idx_price)} rows outside the price range.")
+        logger.warning("Rows outside the price range:\n" + str(df.loc[~idx_price, ['price']]))
     df = df[idx_price].copy()
 
     # Ensure `last_review` is properly formatted
@@ -47,6 +49,14 @@ def go(args):
         logger.warning(f"Found {np.sum(~idx_geo)} rows outside geographical boundaries.")
         logger.warning("Problematic rows:\n" + str(df.loc[~idx_geo, ['longitude', 'latitude']]))
     df = df[idx_geo].copy()
+
+    # Validate filtering success
+    logger.info('Validating geographical boundaries after filtering.')
+    invalid_geo = df[~(df['longitude'].between(-74.25, -73.50) & df['latitude'].between(40.5, 41.2))]
+    if not invalid_geo.empty:
+        logger.error("The following rows remain outside the valid geographical boundaries:")
+        logger.error(invalid_geo)
+        raise ValueError("Filtering failed to remove all invalid geographical entries.")
 
     # Save the cleaned data
     logger.info('Saving and exporting cleaned data.')
