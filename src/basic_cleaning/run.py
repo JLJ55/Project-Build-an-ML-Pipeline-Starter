@@ -28,7 +28,7 @@ def go(args):
     df = pd.read_csv(local_path)
     
     # EDA with arguments passed into the step
-    logger.info('Cleaning data.')
+    logger.info('Cleaning data: Filtering by price range.')
     idx = df['price'].between(float(args.min_price), float(args.max_price))
     df = df[idx].copy()
     df['last_review'] = pd.to_datetime(df['last_review'])
@@ -37,6 +37,9 @@ def go(args):
     logger.info('Filtering data for valid geographical boundaries.')
     idx = df['longitude'].between(-74.25, -73.50) & df['latitude'].between(40.5, 41.2)
     df = df[idx].copy()
+
+    # Debugging: Log the number of rows after cleaning
+    logger.info(f"Number of rows after cleaning: {df.shape[0]}")
 
     # Save the cleaned data
     logger.info('Saving and exporting cleaned data.')
@@ -97,4 +100,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     go(args)
-
