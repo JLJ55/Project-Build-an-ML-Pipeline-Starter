@@ -30,12 +30,23 @@ def go(args):
 
     # Data Cleaning
     logger.info('Cleaning data.')
+
+    # Check for NaN values in longitude and latitude
+    if df[['longitude', 'latitude']].isnull().any().any():
+        logger.warning("Found missing values in longitude/latitude columns. These will be dropped.")
+        logger.warning(f"Rows with missing longitude/latitude:\n{df[df[['longitude', 'latitude']].isnull()]}")
+        df = df.dropna(subset=['longitude', 'latitude']).copy()
+
+    # Check data types for longitude and latitude
+    if not np.issubdtype(df['longitude'].dtype, np.number) or not np.issubdtype(df['latitude'].dtype, np.number):
+        logger.error("Longitude or latitude contains non-numeric values.")
+        raise ValueError("Longitude and latitude must be numeric.")
+
     # Filter by price range
     logger.info('Filtering data by price range.')
     idx_price = df['price'].between(float(args.min_price), float(args.max_price))
     if np.sum(~idx_price) > 0:
         logger.warning(f"Found {np.sum(~idx_price)} rows outside the price range.")
-        logger.warning("Rows outside the price range:\n" + str(df.loc[~idx_price, ['price']]))
     df = df[idx_price].copy()
 
     # Ensure `last_review` is properly formatted
@@ -46,15 +57,14 @@ def go(args):
     logger.info('Filtering data for valid geographical boundaries.')
     idx_geo = df['longitude'].between(-74.25, -73.50) & df['latitude'].between(40.5, 41.2)
     if np.sum(~idx_geo) > 0:
-        logger.warning(f"Found {np.sum(~idx_geo)} rows outside geographical boundaries.")
-        logger.warning("Problematic rows:\n" + str(df.loc[~idx_geo, ['longitude', 'latitude']]))
+        logger.warning(f"Found {np.sum(~idx_geo)} rows outside geographical boundaries. These will be removed.")
+        logger.warning(f"Rows outside boundaries:\n{df.loc[~idx_geo, ['longitude', 'latitude']]}")
     df = df[idx_geo].copy()
 
     # Validate filtering success
-    logger.info('Validating geographical boundaries after filtering.')
     invalid_geo = df[~(df['longitude'].between(-74.25, -73.50) & df['latitude'].between(40.5, 41.2))]
     if not invalid_geo.empty:
-        logger.error("The following rows remain outside the valid geographical boundaries:")
+        logger.error("Rows remain outside valid geographical boundaries after filtering:")
         logger.error(invalid_geo)
         raise ValueError("Filtering failed to remove all invalid geographical entries.")
 
