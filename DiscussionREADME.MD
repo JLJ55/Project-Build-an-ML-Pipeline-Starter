@@ -1,4 +1,6 @@
 Wandb Link: https://wandb.ai/jjanae39-western-governors-university/nyc_airbnb?nw=nwuserjjanae39
+
+
 GitHub Link: https://github.com/JLJ55/Project-Build-an-ML-Pipeline-Starter.git
 
 ### Future Improvements for the Pipeline
